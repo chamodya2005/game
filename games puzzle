@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equation Builder Game</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        .game-container { margin-top: 50px; }
+        .equation-box { font-size: 24px; margin: 20px; padding: 10px; border: 2px solid #333; display: inline-block; min-width: 100px; }
+        .draggable { padding: 10px; margin: 10px; background: lightblue; display: inline-block; cursor: grab; border-radius: 5px; }
+        .drop-zone { border: 2px dashed #333; padding: 20px; display: inline-block; min-width: 50px; }
+        .correct { background: lightgreen; }
+        .wrong { background: lightcoral; }
+        .score-board { margin-top: 20px; font-size: 20px; }
+        .timer { font-size: 20px; color: red; }
+    </style>
+</head>
+<body>
+    <h1>Equation Builder Game</h1>
+    <div class="game-container">
+        <div class="equation-box">
+            <span id="num1"></span>
+            <span class="drop-zone" id="operator"></span>
+            <span id="num2"></span> = <span id="result"></span>
+        </div>
+        <br>
+        <div id="options"></div>
+        <div class="score-board">Score: <span id="score">0</span></div>
+        <div class="timer">Time Left: <span id="time">30</span> sec</div>
+    </div>
+    <script>
+        const operators = ['+', '-', '*', '/'];
+        let num1, num2, correctOperator, result;
+        let score = 0;
+        let timeLeft = 30;
+        let timer;
+
+        function generateEquation() {
+            num1 = Math.floor(Math.random() * 10) + 1;
+            num2 = Math.floor(Math.random() * 10) + 1;
+            correctOperator = operators[Math.floor(Math.random() * operators.length)];
+            result = eval(`${num1} ${correctOperator} ${num2}`);
+
+            document.getElementById('num1').textContent = num1;
+            document.getElementById('num2').textContent = num2;
+            document.getElementById('result').textContent = result;
+            document.getElementById('operator').textContent = '';
+
+            generateOptions();
+        }
+
+        function generateOptions() {
+            const optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = '';
+            let shuffledOperators = [...operators].sort(() => Math.random() - 0.5);
+            shuffledOperators.forEach(op => {
+                let span = document.createElement('span');
+                span.textContent = op;
+                span.classList.add('draggable');
+                span.draggable = true;
+                span.addEventListener('dragstart', dragStart);
+                optionsDiv.appendChild(span);
+            });
+        }
+
+        function dragStart(event) {
+            event.dataTransfer.setData("text", event.target.textContent);
+        }
+
+        document.getElementById('operator').addEventListener('dragover', function(event) {
+            event.preventDefault();
+        });
+
+        document.getElementById('operator').addEventListener('drop', function(event) {
+            event.preventDefault();
+            let droppedOperator = event.dataTransfer.getData("text");
+            event.target.textContent = droppedOperator;
+            checkAnswer(droppedOperator);
+        });
+
+        function checkAnswer(selectedOperator) {
+            if (selectedOperator === correctOperator) {
+                document.getElementById('operator').classList.add('correct');
+                score += 10;
+                document.getElementById('score').textContent = score;
+            } else {
+                document.getElementById('operator').classList.add('wrong');
+            }
+            setTimeout(() => {
+                document.getElementById('operator').classList.remove('correct', 'wrong');
+                generateEquation();
+            }, 1000);
+        }
+
+        function startTimer() {
+            timer = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    document.getElementById('time').textContent = timeLeft;
+                } else {
+                    clearInterval(timer);
+                    alert("Time's up! Your final score is: " + score);
+                    resetGame();
+                }
+            }, 1000);
+        }
+
+        function resetGame() {
+            score = 0;
+            timeLeft = 30;
+            document.getElementById('score').textContent = score;
+            document.getElementById('time').textContent = timeLeft;
+            startTimer();
+            generateEquation();
+        }
+
+        generateEquation();
+        startTimer();
+    </script>
+</body>
+</html>
